@@ -1,0 +1,30 @@
+# Arquivos temporários
+*.tmp
+*.log
+temp/
+tmp/
+
+# Arquivos de backup
+*.bak
+*~
+
+# Arquivos específicos de SO
+.DS_Store
+Thumbs.db
+
+# Arquivos de download temporários
+*.zip
+*.tar.gz
+*.tgz
+
+# Credenciais
+*.key
+*.pem
+secrets.*
+.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
