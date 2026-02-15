@@ -2,7 +2,7 @@
 
 # dev-setup - OS Router
 # Detecta o sistema operacional e redireciona para o instalador apropriado
-# Uso: curl -fsSL https://raw.githubusercontent.com/USER/dev-setup/main/install.sh | bash
+# Uso: curl -fsSL https://raw.githubusercontent.com/rennasccenth/dev-setup/main/install.sh | bash
 
 set -e
 
@@ -46,10 +46,10 @@ case "${OS}" in
         echo -e "${YELLOW}⚠ Detectado Git Bash no Windows${NC}"
         echo -e "${YELLOW}Para melhor compatibilidade, use o instalador PowerShell:${NC}"
         echo ""
-        echo -e "${BLUE}iwr -useb https://raw.githubusercontent.com/USER/dev-setup/main/install.ps1 | iex${NC}"
+        echo -e "${BLUE}iwr -useb https://raw.githubusercontent.com/rennasccenth/dev-setup/main/install.ps1 | iex${NC}"
         echo ""
         echo -e "${YELLOW}Ou execute diretamente o instalador do Windows:${NC}"
-        echo -e "${BLUE}curl -fsSL https://raw.githubusercontent.com/USER/dev-setup/main/windows-dev-setup/install.ps1 -o install-windows.ps1${NC}"
+        echo -e "${BLUE}curl -fsSL https://raw.githubusercontent.com/rennasccenth/dev-setup/main/windows-dev-setup/install.ps1 -o install-windows.ps1${NC}"
         echo -e "${BLUE}powershell -ExecutionPolicy Bypass -File install-windows.ps1${NC}"
         echo ""
         exit 0

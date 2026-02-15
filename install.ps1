@@ -1,6 +1,6 @@
 # dev-setup - OS Router (PowerShell)
 # Redireciona para o instalador Windows
-# Uso: iwr -useb https://raw.githubusercontent.com/USER/dev-setup/main/install.ps1 | iex
+# Uso: iwr -useb https://raw.githubusercontent.com/rennasccenth/dev-setup/main/install.ps1 | iex
 
 param(
     [switch]$SkipDotnet,
@@ -17,7 +17,7 @@ if (-not $IsWindows -and -not $env:OS -eq "Windows_NT") {
     Write-Host "❌ Este script PowerShell é para Windows" -ForegroundColor Red
     Write-Host ""
     Write-Host "Para Linux/macOS, use:" -ForegroundColor Yellow
-    Write-Host "curl -fsSL https://raw.githubusercontent.com/USER/dev-setup/main/install.sh | bash" -ForegroundColor Blue
+    Write-Host "curl -fsSL https://raw.githubusercontent.com/rennasccenth/dev-setup/main/install.sh | bash" -ForegroundColor Blue
     exit 1
 }
 
@@ -29,7 +29,7 @@ Write-Host "➜ Redirecionando para o instalador do Windows Dev Setup..." -Foreg
 Write-Host ""
 
 # Baixar e executar o instalador do Windows
-$windowsInstallerUrl = "https://raw.githubusercontent.com/USER/dev-setup/main/windows-dev-setup/install.ps1"
+$windowsInstallerUrl = "https://raw.githubusercontent.com/rennasccenth/dev-setup/main/windows-dev-setup/install.ps1"
 
 try {
     # Criar argumentos para passar ao instalador

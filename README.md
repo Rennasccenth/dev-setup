@@ -11,13 +11,13 @@ Ter **um único comando** que configure completamente seu ambiente de desenvolvi
 ### Windows (PowerShell como Administrador)
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/USER/dev-setup/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/rennasccenth/dev-setup/main/install.ps1 | iex
 ```
 
 ### Linux / macOS / Git Bash
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/USER/dev-setup/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/rennasccenth/dev-setup/main/install.sh | bash
 ```
 
 ---
@@ -40,7 +40,7 @@ curl -fsSL https://raw.githubusercontent.com/USER/dev-setup/main/install.sh | ba
 
 **Instalação direta:**
 ```powershell
-iwr -useb https://raw.githubusercontent.com/USER/dev-setup/main/windows-dev-setup/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/rennasccenth/dev-setup/main/windows-dev-setup/install.ps1 | iex
 ```
 
 ---
