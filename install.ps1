@@ -15,6 +15,39 @@ $ErrorActionPreference = "Stop"
 # AUXILIARY FUNCTIONS
 # ============================================================================
 
+function Wait-UserPrompt {
+    <#
+    .SYNOPSIS
+    Aguarda input do usuário antes de fechar a janela
+    #>
+    param(
+        [switch]$NoPrompt
+    )
+
+    # Pular se NoPrompt ativado
+    if ($NoPrompt) { return }
+
+    # Pular se em ambiente CI/CD
+    if ($env:CI -or $env:TF_BUILD -or $env:GITHUB_ACTIONS) { return }
+
+    # Pular se não for interativo
+    if (-not [Environment]::UserInteractive) { return }
+
+    Write-Host ""
+    Write-Host "Pressione qualquer tecla para fechar esta janela..." -ForegroundColor Cyan
+
+    try {
+        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    } catch {
+        # Fallback se RawUI não disponível
+        try {
+            $null = Read-Host "Pressione ENTER para continuar"
+        } catch {
+            Start-Sleep -Milliseconds 500
+        }
+    }
+}
+
 function Test-BitwardenAvailable {
     <#
     .SYNOPSIS
@@ -331,6 +364,9 @@ Write-Host ""
 Write-Host "🧹 Limpando arquivos temporários..." -ForegroundColor Cyan
 Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "✓ Limpeza concluída" -ForegroundColor Green
+
+# Aguardar input antes de fechar (a menos que automatizado)
+Wait-UserPrompt -NoPrompt:$NoPrompt
 
 # Exit with installer's exit code
 exit $installerExitCode
