@@ -22,6 +22,222 @@ curl -fsSL https://raw.githubusercontent.com/rennasccenth/dev-setup/main/install
 
 ---
 
+## 🔒 Requisito: Autenticação GitHub via Bitwarden
+
+Este instalador acessa **repositórios privados** de configuração para cada sistema operacional. Por isso, **Bitwarden CLI é obrigatório** para armazenar e obter seu GitHub Personal Access Token de forma segura.
+
+### ⚙️ Setup Inicial (Apenas 1x)
+
+#### 1. Instale Bitwarden CLI
+
+**Windows:**
+```powershell
+winget install Bitwarden.CLI
+```
+
+**Linux/macOS:**
+```bash
+# Via npm (requer Node.js)
+npm install -g @bitwarden/cli
+
+# Ou via package manager específico
+# Snap (Linux)
+sudo snap install bw
+
+# Homebrew (macOS)
+brew install bitwarden-cli
+```
+
+#### 2. Faça Login no Bitwarden
+
+```bash
+bw login
+```
+
+Você será solicitado a inserir:
+- Email da conta Bitwarden
+- Master password
+
+#### 3. Desbloqueie o Vault
+
+```bash
+bw unlock
+```
+
+Copie a session key retornada e exporte:
+
+**Windows (PowerShell):**
+```powershell
+$env:BW_SESSION = "<session-key-aqui>"
+```
+
+**Linux/macOS (Bash/Zsh):**
+```bash
+export BW_SESSION="<session-key-aqui>"
+```
+
+⚠️ **Importante:** Você precisará executar `bw unlock` e exportar `BW_SESSION` toda vez que abrir um novo terminal.
+
+#### 4. Crie um GitHub Personal Access Token (PAT)
+
+1. Acesse: https://github.com/settings/tokens/new
+2. Configurações do token:
+   - **Nome:** `Dev Setup Token`
+   - **Expiration:** Escolha duração (recomendado: 90 dias)
+   - **Scopes:** Selecione **`repo`** (Full control of private repositories)
+3. Clique em **Generate token**
+4. **COPIE O TOKEN** (você não poderá vê-lo novamente!)
+
+#### 5. Armazene o PAT no Bitwarden
+
+**Opção A: Via Web Vault (Recomendado)**
+
+1. Acesse https://vault.bitwarden.com/
+2. Crie novo item:
+   - **Name:** `GitHubDevSetup`
+   - **Type:** Login ou Secure Note
+3. Adicione campo customizado:
+   - Clique em **"+ New custom field"**
+   - **Field name:** `github-pat`
+   - **Field type:** **Hidden**
+   - **Value:** Cole o PAT que você copiou
+4. Salve o item
+
+**Opção B: Via CLI**
+
+**Windows (PowerShell):**
+```powershell
+# Obter template de item
+$item = bw get template item | ConvertFrom-Json
+
+# Configurar nome e tipo
+$item.name = "GitHubDevSetup"
+$item.type = 2  # Secure Note
+
+# Adicionar campo customizado
+$field = @{
+    name = "github-pat"
+    value = "ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"  # Seu PAT aqui
+    type = 1  # Hidden
+}
+$item.fields = @($field)
+
+# Criar item no vault
+$item | ConvertTo-Json | bw encode | bw create item
+```
+
+**Linux/macOS (Bash):**
+```bash
+# Obter template e criar item
+bw get template item | jq \
+  '.name = "GitHubDevSetup" |
+   .type = 2 |
+   .fields = [{
+     "name": "github-pat",
+     "value": "ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+     "type": 1
+   }]' | bw encode | bw create item
+```
+
+#### 6. Sincronize o Vault (se usar app desktop/móvel)
+
+```bash
+bw sync
+```
+
+### ✅ Validar Setup
+
+Antes de executar o instalador, você pode validar se tudo está configurado corretamente:
+
+**Windows (PowerShell):**
+```powershell
+iwr -useb https://raw.githubusercontent.com/rennasccenth/dev-setup/main/validate-setup.ps1 | iex
+```
+
+Ou com mais detalhes:
+```powershell
+iwr -useb https://raw.githubusercontent.com/rennasccenth/dev-setup/main/validate-setup.ps1 | iex -Args "-Verbose"
+```
+
+Este script verifica:
+- ✅ Bitwarden CLI instalado e desbloqueado
+- ✅ Item `GitHubDevSetup` existe no vault
+- ✅ Campo `github-pat` configurado corretamente
+- ✅ GitHub CLI disponível (opcional, pode ser instalado automaticamente)
+- ✅ winget disponível (necessário para auto-install do gh)
+
+### 🚀 Agora você está pronto!
+
+Execute o one-liner correspondente ao seu sistema operacional (veja seção acima).
+
+O instalador irá:
+1. ✅ Verificar se Bitwarden está desbloqueado
+2. ✅ Obter seu GitHub PAT do vault
+3. ✅ Instalar GitHub CLI (se necessário)
+4. ✅ Autenticar no GitHub
+5. ✅ Clonar repositório privado de configuração do seu SO
+6. ✅ Executar instalação completa
+
+### 🔧 Troubleshooting
+
+**Erro: "Bitwarden CLI não está disponível ou desbloqueado"**
+
+```bash
+# Desbloqueie o vault
+bw unlock
+
+# Exporte a session key retornada
+export BW_SESSION="<session-key>"  # Linux/macOS
+$env:BW_SESSION = "<session-key>"   # Windows
+```
+
+**Erro: "GitHub PAT não encontrado no Bitwarden"**
+
+Certifique-se de que:
+- O item no vault se chama exatamente **`GitHubDevSetup`**
+- O campo customizado se chama exatamente **`github-pat`**
+- O tipo do campo é **Hidden**
+
+**Erro: "GitHub PAT inválido ou expirado"**
+
+1. Verifique se o token tem scope **`repo`**
+2. Verifique se o token não expirou
+3. Crie um novo token: https://github.com/settings/tokens/new
+4. Atualize o valor no Bitwarden vault
+
+**Erro: "GitHub CLI não encontrado"**
+
+**Windows:**
+```powershell
+winget install GitHub.cli
+```
+
+**Linux/macOS:**
+```bash
+# Homebrew
+brew install gh
+
+# Ou via package manager
+# Ubuntu/Debian
+sudo apt install gh
+
+# Fedora
+sudo dnf install gh
+```
+
+### 🔓 Modo Público (Fallback)
+
+Se você está usando repositórios públicos e não precisa de autenticação, pode usar:
+
+```powershell
+# Windows - modo público
+iwr -useb https://raw.githubusercontent.com/rennasccenth/dev-setup/main/install.ps1 | iex -Args "-ForcePublic"
+```
+
+⚠️ **Nota:** O modo público não funcionará se os repositórios OS-específicos forem privados.
+
+---
+
 ## 📦 Ferramentas Disponíveis
 
 ### ✅ Windows Dev Setup
@@ -38,10 +254,9 @@ curl -fsSL https://raw.githubusercontent.com/rennasccenth/dev-setup/main/install
 
 **Documentação:** [windows-dev-setup/README.md](windows-dev-setup/README.md)
 
-**Instalação direta:**
-```powershell
-iwr -useb https://raw.githubusercontent.com/rennasccenth/dev-setup/main/windows-dev-setup/install.ps1 | iex
-```
+**Repositório:** [rennasccenth/dev-setup-windows](https://github.com/rennasccenth/dev-setup-windows) (privado)
+
+> **Nota:** Use o instalador universal acima (com autenticação Bitwarden) para acesso automático ao repositório privado.
 
 ---
 

@@ -3,6 +3,8 @@
 *.log
 temp/
 tmp/
+test-output.log
+*-test-*.log
 
 # Arquivos de backup
 *.bak
