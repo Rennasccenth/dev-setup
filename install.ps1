@@ -110,7 +110,7 @@ function Install-GitHubCLI {
 
     try {
         # Install without masking output
-        winget install GitHub.cli --silent --accept-package-agreements --accept-source-agreements
+        winget install GitHub.cli --source winget --silent --accept-package-agreements --accept-source-agreements
 
         if ($LASTEXITCODE -ne 0) {
             throw "Falha ao instalar GitHub CLI (exit code: $LASTEXITCODE)"
