@@ -109,10 +109,65 @@ function Install-GitHubCLI {
     }
 
     try {
-        winget install GitHub.cli --silent --accept-package-agreements --accept-source-agreements | Out-Null
+        # Install without masking output
+        winget install GitHub.cli --silent --accept-package-agreements --accept-source-agreements
 
-        # Refresh PATH to include newly installed gh
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+        if ($LASTEXITCODE -ne 0) {
+            throw "Falha ao instalar GitHub CLI (exit code: $LASTEXITCODE)"
+        }
+
+        # Wait for Windows to register the installation
+        Write-Host "⏳ Aguardando registro da instalação..." -ForegroundColor Yellow
+        Start-Sleep -Seconds 3
+
+        # Try to find gh with retry (up to 5 attempts)
+        $maxRetries = 5
+        $retryCount = 0
+        $ghFound = $false
+
+        while (-not $ghFound -and $retryCount -lt $maxRetries) {
+            # Force PATH refresh
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
+                        [System.Environment]::GetEnvironmentVariable("Path", "User")
+
+            # Try to find gh
+            $ghCommand = Get-Command gh -ErrorAction SilentlyContinue
+
+            if ($ghCommand) {
+                $ghFound = $true
+                Write-Host "✓ GitHub CLI detectado: $($ghCommand.Source)" -ForegroundColor Green
+            } else {
+                $retryCount++
+                if ($retryCount -lt $maxRetries) {
+                    Write-Host "⏳ Tentativa $retryCount/$maxRetries - aguardando..." -ForegroundColor Yellow
+                    Start-Sleep -Seconds 2
+                }
+            }
+        }
+
+        # Fallback: check common paths manually
+        if (-not $ghFound) {
+            Write-Host "⏳ Verificando paths comuns..." -ForegroundColor Yellow
+            $commonPaths = @(
+                "$env:ProgramFiles\GitHub CLI\gh.exe",
+                "$env:LOCALAPPDATA\Programs\GitHub CLI\gh.exe",
+                "${env:ProgramFiles(x86)}\GitHub CLI\gh.exe"
+            )
+
+            foreach ($path in $commonPaths) {
+                if (Test-Path $path) {
+                    Write-Host "✓ GitHub CLI encontrado em: $path" -ForegroundColor Green
+                    # Add to current session PATH
+                    $env:Path = "$([System.IO.Path]::GetDirectoryName($path));$env:Path"
+                    $ghFound = $true
+                    break
+                }
+            }
+        }
+
+        if (-not $ghFound) {
+            throw "GitHub CLI instalado mas não encontrado no PATH. Tente reiniciar o terminal."
+        }
 
         Write-Host "✓ GitHub CLI instalado com sucesso" -ForegroundColor Green
     } catch {
@@ -152,12 +207,23 @@ function Set-GitHubAuthentication {
         Write-Host "❌ Erro ao autenticar no GitHub" -ForegroundColor Red
         Write-Host "Detalhes: $_" -ForegroundColor Yellow
         Write-Host ""
-        Write-Host "Possíveis causas:" -ForegroundColor Yellow
-        Write-Host "• Token inválido ou expirado" -ForegroundColor Cyan
-        Write-Host "• Token sem scope 'repo'" -ForegroundColor Cyan
-        Write-Host ""
-        Write-Host "Crie um novo token em: https://github.com/settings/tokens/new" -ForegroundColor Blue
-        Write-Host "Scopes necessários: repo (Full control of private repositories)" -ForegroundColor Blue
+
+        # Check if error is command not found
+        if ($_ -match "gh.*not found|gh.*não.*encontrado|cannot find.*gh|CommandNotFoundException") {
+            Write-Host "Causa detectada:" -ForegroundColor Yellow
+            Write-Host "• GitHub CLI (gh) não está no PATH" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "Solução:" -ForegroundColor Yellow
+            Write-Host "Reinicie o terminal ou PowerShell para atualizar o PATH" -ForegroundColor Blue
+        } else {
+            Write-Host "Possíveis causas:" -ForegroundColor Yellow
+            Write-Host "• Token inválido ou expirado" -ForegroundColor Cyan
+            Write-Host "• Token sem scope 'repo'" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "Crie um novo token em: https://github.com/settings/tokens/new" -ForegroundColor Blue
+            Write-Host "Scopes necessários: repo (Full control of private repositories)" -ForegroundColor Blue
+        }
+
         Wait-UserPrompt
         exit 1
     }
@@ -294,6 +360,25 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     Install-GitHubCLI
     Write-Host ""
 }
+
+# Verify that gh is actually available before continuing
+Write-Host "🔍 Verificando GitHub CLI..." -ForegroundColor Cyan
+$ghCommand = Get-Command gh -ErrorAction SilentlyContinue
+
+if (-not $ghCommand) {
+    Write-Host "❌ GitHub CLI não está disponível" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Possíveis soluções:" -ForegroundColor Yellow
+    Write-Host "1. Reinstale manualmente: " -ForegroundColor Cyan -NoNewline
+    Write-Host "winget install GitHub.cli" -ForegroundColor Blue
+    Write-Host "2. Reinicie o terminal/PowerShell" -ForegroundColor Cyan
+    Write-Host "3. Adicione manualmente ao PATH" -ForegroundColor Cyan
+    Wait-UserPrompt
+    exit 1
+}
+
+Write-Host "✓ GitHub CLI disponível: $($ghCommand.Source)" -ForegroundColor Green
+Write-Host ""
 
 # Authenticate with GitHub
 Set-GitHubAuthentication -PAT $GitHubPAT
