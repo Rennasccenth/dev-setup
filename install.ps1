@@ -12,6 +12,36 @@ param(
 $ErrorActionPreference = "Stop"
 
 # ============================================================================
+# ENCODING CONFIGURATION
+# ============================================================================
+
+# Configure UTF-8 encoding for proper emoji/unicode display
+# Required for Windows PowerShell 5.1 (PowerShell 7+ handles this better by default)
+try {
+    # Set console output encoding to UTF-8
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+    # Set PowerShell output encoding to UTF-8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+
+    # For older PowerShell versions, also try to set input encoding
+    if ($PSVersionTable.PSVersion.Major -lt 6) {
+        [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+
+        # Try to set console code page to UTF-8 (65001)
+        # This might fail in some environments, so we catch silently
+        try {
+            chcp 65001 | Out-Null
+        } catch {
+            # Silently ignore if chcp fails (not critical)
+        }
+    }
+} catch {
+    # If encoding setup fails, continue anyway (script will work, just without emojis)
+    # Don't show error to avoid cluttering output
+}
+
+# ============================================================================
 # AUXILIARY FUNCTIONS
 # ============================================================================
 
