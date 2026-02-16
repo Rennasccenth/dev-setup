@@ -88,6 +88,7 @@ function Get-BitwardenSecret {
         return $field.value
     } catch {
         Write-Host "⚠️  Erro ao obter segredo do Bitwarden: $_" -ForegroundColor Yellow
+        Wait-UserPrompt
         return $null
     }
 }
@@ -103,6 +104,7 @@ function Install-GitHubCLI {
     if (-not $wingetPath) {
         Write-Host "❌ winget não está disponível" -ForegroundColor Red
         Write-Host "Instale manualmente: https://github.com/cli/cli#installation" -ForegroundColor Yellow
+        Wait-UserPrompt
         exit 1
     }
 
@@ -115,6 +117,7 @@ function Install-GitHubCLI {
         Write-Host "✓ GitHub CLI instalado com sucesso" -ForegroundColor Green
     } catch {
         Write-Host "❌ Erro ao instalar GitHub CLI: $_" -ForegroundColor Red
+        Wait-UserPrompt
         exit 1
     }
 }
@@ -155,6 +158,7 @@ function Set-GitHubAuthentication {
         Write-Host ""
         Write-Host "Crie um novo token em: https://github.com/settings/tokens/new" -ForegroundColor Blue
         Write-Host "Scopes necessários: repo (Full control of private repositories)" -ForegroundColor Blue
+        Wait-UserPrompt
         exit 1
     }
 }
@@ -184,6 +188,8 @@ function Get-PrivateOSRepository {
         $OsRepoMap.Keys | ForEach-Object {
             Write-Host "  • $_" -ForegroundColor Cyan
         }
+
+        Wait-UserPrompt
         exit 1
     }
 
@@ -206,6 +212,7 @@ function Get-PrivateOSRepository {
         Write-Host "• Token sem scope 'repo'" -ForegroundColor Cyan
         Write-Host "• Repositório não existe ou você não tem acesso" -ForegroundColor Cyan
         Write-Host "• Problemas de conexão de rede" -ForegroundColor Cyan
+        Wait-UserPrompt
         exit 1
     }
 }
@@ -228,35 +235,6 @@ if (-not $IsWindows -and -not $env:OS -eq "Windows_NT") {
 
 Write-Host "✓ Sistema operacional: Windows" -ForegroundColor Green
 Write-Host ""
-
-# Skip authentication if ForcePublic flag is set
-if ($ForcePublic) {
-    Write-Host "⚠️  Modo público: pulando autenticação" -ForegroundColor Yellow
-    Write-Host ""
-
-    # Fallback to public URL (if repo is public)
-    $windowsInstallerUrl = "https://raw.githubusercontent.com/rennasccenth/dev-setup/main/windows-dev-setup/install.ps1"
-
-    try {
-        $installerArgs = @()
-        if ($SkipDotnet) { $installerArgs += "-SkipDotnet" }
-        if ($NoPrompt) { $installerArgs += "-NoPrompt" }
-
-        $installerScript = Invoke-WebRequest -Uri $windowsInstallerUrl -UseBasicParsing | Select-Object -ExpandProperty Content
-        $scriptBlock = [ScriptBlock]::Create($installerScript)
-
-        if ($installerArgs.Count -gt 0) {
-            & $scriptBlock @installerArgs
-        } else {
-            & $scriptBlock
-        }
-        exit 0
-    } catch {
-        Write-Host "❌ Erro ao baixar instalador público: $_" -ForegroundColor Red
-        exit 1
-    }
-}
-
 # Check Bitwarden availability (REQUIRED)
 Write-Host "🔍 Verificando Bitwarden CLI..." -ForegroundColor Cyan
 
@@ -267,15 +245,14 @@ if (-not (Test-BitwardenAvailable)) {
     Write-Host ""
     Write-Host "Setup necessário:" -ForegroundColor Yellow
     Write-Host "1. Instale: " -ForegroundColor Cyan -NoNewline
-    Write-Host "winget install Bitwarden.CLI" -ForegroundColor Blue
+    Write-Host "winget install Bitwarden.CLI --source winget" -ForegroundColor Blue
     Write-Host "2. Login: " -ForegroundColor Cyan -NoNewline
     Write-Host "bw login" -ForegroundColor Blue
     Write-Host "3. Unlock: " -ForegroundColor Cyan -NoNewline
     Write-Host "bw unlock" -ForegroundColor Blue
     Write-Host "4. Export session: " -ForegroundColor Cyan -NoNewline
     Write-Host "`$env:BW_SESSION = '<session-key>'" -ForegroundColor Blue
-    Write-Host ""
-    Write-Host "Documentação: https://github.com/rennasccenth/dev-setup#setup-inicial" -ForegroundColor Blue
+    Wait-UserPrompt
     exit 1
 }
 
@@ -301,6 +278,7 @@ if ([string]::IsNullOrWhiteSpace($GitHubPAT)) {
         Write-Host ""
         Write-Host "Criar token: https://github.com/settings/tokens/new" -ForegroundColor Blue
         Write-Host "Scopes necessários: repo (Full control of private repositories)" -ForegroundColor Blue
+        Wait-UserPrompt
         exit 1
     }
 
@@ -333,6 +311,7 @@ if (-not (Test-Path $installerPath)) {
     Write-Host "❌ Instalador não encontrado no repositório clonado" -ForegroundColor Red
     Write-Host "Path esperado: $installerPath" -ForegroundColor Yellow
     Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+    Wait-UserPrompt
     exit 1
 }
 
@@ -356,6 +335,8 @@ try {
 } catch {
     Write-Host "❌ Erro ao executar instalador: $_" -ForegroundColor Red
     Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+
+    Wait-UserPrompt
     exit 1
 }
 
