@@ -1,3 +1,6 @@
 [submodule "windows-dev-setup"]
 	path = windows-dev-setup
 	url = git@github.com:Rennasccenth/dev-setup-windows.git
+[submodule "linux-dev-setup"]
+	path = linux-dev-setup
+	url = ./linux-dev-setup

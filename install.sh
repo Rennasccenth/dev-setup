@@ -56,16 +56,15 @@ case "${OS}" in
         ;;
 
     Linux)
-        echo -e "${YELLOW}🔧 Instalador Linux em desenvolvimento...${NC}"
-        echo ""
-        echo -e "${BLUE}Em breve: suporte completo para distribuições Linux${NC}"
-        echo -e "  - Detecção automática de distro (Ubuntu, Fedora, Arch, etc.)"
-        echo -e "  - Instalação de pacotes via apt/dnf/pacman"
-        echo -e "  - Configuração de dotfiles"
-        echo -e "  - Setup de ambientes de desenvolvimento"
-        echo ""
-        echo -e "${YELLOW}Por enquanto, use o instalador Windows se estiver no WSL${NC}"
-        exit 1
+        if ! command -v dotnet &>/dev/null; then
+            command -v yay &>/dev/null && yay -S --noconfirm dotnet-sdk \
+                || sudo pacman -S --noconfirm dotnet-sdk
+        fi
+        TEMP_DIR=$(mktemp -d)
+        git clone https://github.com/rennasccenth/dev-setup.git "$TEMP_DIR"
+        cd "$TEMP_DIR/linux-dev-setup"
+        dotnet run --project src/LinuxDevSetup -c Release
+        rm -rf "$TEMP_DIR"
         ;;
 
     macOS)
