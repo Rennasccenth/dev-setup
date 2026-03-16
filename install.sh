@@ -61,7 +61,7 @@ case "${OS}" in
                 || sudo pacman -S --noconfirm dotnet-sdk
         fi
         TEMP_DIR=$(mktemp -d)
-        git clone https://github.com/rennasccenth/dev-setup.git "$TEMP_DIR"
+        git clone --recurse-submodules https://github.com/rennasccenth/dev-setup.git "$TEMP_DIR"
         cd "$TEMP_DIR/linux-dev-setup"
         dotnet run --project src/LinuxDevSetup -c Release
         rm -rf "$TEMP_DIR"
